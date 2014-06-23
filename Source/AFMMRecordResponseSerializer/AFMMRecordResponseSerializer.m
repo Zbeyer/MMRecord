@@ -155,6 +155,11 @@ NSString * const AFMMRecordResponseSerializerWithDataKey = @"AFMMRecordResponseS
                                                                      initialEntity:initialEntity
                                                                            context:self.context];
     
+    if (self.entityPrimaryKeyInjectionBlock) {
+        recordResponse.entityPrimaryKeyInjectionBlock = self.entityPrimaryKeyInjectionBlock;
+    }
+    
+    
     NSArray *records = [self recordsFromMMRecordResponse:recordResponse
                                        backgroundContext:backgroundContext];
     

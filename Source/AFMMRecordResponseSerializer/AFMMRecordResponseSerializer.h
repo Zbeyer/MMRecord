@@ -24,6 +24,8 @@
 
 #import <CoreData/CoreData.h>
 
+@class MMRecordOptionsEntityPrimaryKeyInjectionBlock;
+
 /**
  AFMMRecordResponseSerializerWithDataKey is used to access the the response data stored in userInfo after an error is returned from an AFNetworking request.
  */
@@ -58,6 +60,12 @@ extern NSString * const AFMMRecordResponseSerializerWithDataKey;
  provide different or more complex mapping functionality.
  */
 @interface AFMMRecordResponseSerializer : AFHTTPResponseSerializer <AFURLResponseSerialization>
+
+//CEP Addition - AFMMRecordResponseSerializer has no way to specify an entityPrimaryKeyInjectionBlock
+//This functionality is now slated for next milestone release cf this conversation:
+//https://github.com/mutualmobile/MMRecord/issues/56
+//Until then, we implement our own stopgap to achieve this functionality:
+@property (nonatomic, copy) MMRecordOptionsEntityPrimaryKeyInjectionBlock *entityPrimaryKeyInjectionBlock;
 
 /**
  Designated initializer for the MMRecordResponseSerializer.

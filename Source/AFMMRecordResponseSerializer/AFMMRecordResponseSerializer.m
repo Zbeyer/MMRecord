@@ -134,7 +134,9 @@ NSString * const AFMMRecordResponseSerializerWithDataKey = @"AFMMRecordResponseS
     
     [self.context performBlockAndWait:^{
         for (NSManagedObjectID *objectID in objectIDs) {
-            [records addObject:[self.context objectWithID:objectID]];
+            NSManagedObject *record = [self.context objectWithID:objectID];
+            [self.context refreshObject:record mergeChanges:NO];
+            [records addObject:record];
         }
     }];
     

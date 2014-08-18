@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name     = 'MMRecord'
-  s.version  = '1.3.0'
+  s.version  = '1.4.1'
   s.license  = 'MIT'
   s.summary  = 'A simple block based web service integration library.'
   s.homepage = 'https://github.com/MutualMobile/MMRecord'
@@ -49,6 +49,7 @@ Pod::Spec.new do |s|
   end
   
   s.subspec 'TweakModel' do |tm|
+    tm.ios.deployment_target = '6.0'
     tm.source_files = 'Source/FBMMRecordTweakModel/*.{h,m}'
     tm.dependency 'MMRecord/Core'
     tm.dependency 'Tweaks', '>= 1.1.0'

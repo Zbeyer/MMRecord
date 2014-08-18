@@ -107,14 +107,21 @@ NSString * const AFMMRecordResponseSerializerWithDataKey = @"AFMMRecordResponseS
 }
 
 - (NSArray *)recordsFromMMRecordResponse:(MMRecordResponse *)recordResponse
-                       backgroundContext:(NSManagedObjectContext *)backgroundContext {
+                       backgroundContext:(NSManagedObjectContext *)backgroundContext
+                                 options:(MMRecordOptions *)options {
     NSMutableArray *objectIDs = [NSMutableArray array];
     
     [backgroundContext performBlockAndWait:^{
         NSError *error;
         NSArray *records = [recordResponse records];
         if (![backgroundContext save:&error]) {
-            NSLog(@"%s encountered error saving: %@", __PRETTY_FUNCTION__, error);
+            NSDictionary *parameters = nil;
+            if (error.localizedDescription != nil) {
+                parameters = [options.debugger parametersWithKeys:@[MMRecordDebuggerParameterErrorDescription]
+                                              values:@[error.localizedDescription]];
+            }
+            [options.debugger handleErrorCode:MMRecordErrorCodeCoreDataSaveError
+                               withParameters:parameters];
             return;
         }
         
@@ -125,10 +132,11 @@ NSString * const AFMMRecordResponseSerializerWithDataKey = @"AFMMRecordResponseS
     
     NSMutableArray *records = [NSMutableArray array];
     
-    
     [self.context performBlockAndWait:^{
         for (NSManagedObjectID *objectID in objectIDs) {
-            [records addObject:[self.context objectWithID:objectID]];
+            NSManagedObject *record = [self.context objectWithID:objectID];
+            [self.context refreshObject:record mergeChanges:NO];
+            [records addObject:record];
         }
     }];
     
@@ -159,16 +167,6 @@ NSString * const AFMMRecordResponseSerializerWithDataKey = @"AFMMRecordResponseS
         (*error) = newError;
     }
     
-    // Verify that the server responded in an expected manner.
-    if (!([responseObject isKindOfClass:[NSDictionary class]]) &&
-        !([responseObject isKindOfClass:[NSArray class]])) {
-
-        (*error) = [MMRecord errorWithMMRecordCode:MMRecordErrorCodeInvalidResponseFormat
-                                       description:[NSString stringWithFormat:@"The response object should be an array or dictionary. The returned response object type was: %@", NSStringFromClass([responseObject class])]];
-
-        return nil;
-    }
-    
     NSEntityDescription *initialEntity = [self.entityMapper recordResponseSerializer:self
                                                                    entityForResponse:response
                                                                       responseObject:responseObject
@@ -176,7 +174,24 @@ NSString * const AFMMRecordResponseSerializerWithDataKey = @"AFMMRecordResponseS
     
     Class managedObjectClass = NSClassFromString([initialEntity managedObjectClassName]);
     
-    MMRecordOptions *options = [AFMMRecordResponseSerializer currentOptionsWithMMRecordSubclass:managedObjectClass];
+    MMRecordOptions *options = [[self class] currentOptionsWithMMRecordSubclass:managedObjectClass];
+    
+    MMRecordDebugger *debugger = [[MMRecordDebugger alloc] init];
+    options.debugger = debugger;
+    
+    // Verify that the server responded in an expected manner.
+    if (!([responseObject isKindOfClass:[NSDictionary class]]) &&
+        !([responseObject isKindOfClass:[NSArray class]])) {
+        NSString *errorDescription = [NSString stringWithFormat:@"The response object should be an array or dictionary. The returned response object type was: %@", NSStringFromClass([responseObject class])];
+        NSDictionary *parameters = [debugger parametersWithKeys:@[MMRecordDebuggerParameterErrorDescription] values:@[errorDescription]];
+        
+        [debugger handleErrorCode:MMRecordErrorCodeInvalidResponseFormat
+                   withParameters:parameters];
+        
+        *error = [debugger primaryError];
+        
+        return nil;
+    }
     
     NSString *keyPathForResponseObject = [options keyPathForResponseObject];
 
@@ -191,7 +206,10 @@ NSString * const AFMMRecordResponseSerializerWithDataKey = @"AFMMRecordResponseS
                                                                                  options:options];
     
     NSArray *records = [self recordsFromMMRecordResponse:recordResponse
-                                       backgroundContext:backgroundContext];
+                                       backgroundContext:backgroundContext
+                                                 options:options];
+    
+    *error = [debugger primaryError];
     
     return records;
 }

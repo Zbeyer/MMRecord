@@ -25,7 +25,8 @@
 @class MMRecord;
 @class MMRecordProtoRecord;
 
-/** This class is the main sheriff in town for populating an instance of MMRecord. This class holds
+/** 
+ This class is the main sheriff in town for populating an instance of MMRecord. This class holds
  no state but takes as parameters the proto records which hold all of the information necesary to
  populate the record that they hold. This class is meant to be subclassed, although this is the base
  implementation of the marshaler. The class that will be used to marshal a record of a given type of
@@ -116,8 +117,8 @@
  relationships on various other records. Generally speaking, its expected that a response will
  contain either duplicate references to record primary keys, which allow MMRecord to fetch the
  appropriate record to associate as a relationship. Or, the response may contain duplicate fully
- saturated objects. In this case, the first object will "win", and all other references to that
- object will be populated using the first one that is found.
+ saturated objects. In this case, the first fully saturated object will "win", and all other 
+ references to that object will be populated using the first one that is found.
  
  This method is intended as a means to merge those various different response objects together to
  create a master instance of a particular record. In some responses an object may contain a subset
@@ -128,8 +129,12 @@
  @param dictionary The dictionary for the n+1th record response object of a given type and 
  primary key.
  @param protoRecord The proto record created to represent this specific object by MMRecord.
- @discussion This method has no default implementation. You must subclass MMRecordMarshaler to
- provide your own implementation.
+ @discussion The default implementation of this method will look for cases where a given record is
+ only identified by a primary key and includes no additional data to populate it with. In this case
+ the primary key of that original proto record will be compared with the incoming object dictionary
+ and if they match then the new dictionary will be associated with the proto record.
+ @warning If you decide to subclass this method you may want to use the super implementation
+ as a starting point for your own implementation. Calling super is not required, but is recommended.
  */
 + (void)mergeDuplicateRecordResponseObjectDictionary:(NSDictionary *)dictionary
                              withExistingProtoRecord:(MMRecordProtoRecord *)protoRecord;

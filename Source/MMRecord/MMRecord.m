@@ -795,8 +795,8 @@ NSString * const MMRecordAttributeAlternateNameKey = @"MMRecordAttributeAlternat
     
     NSError *coreDataError = nil;
     if ([backgroundContext save:&coreDataError] == NO) {
-        NSString *coreDataErrorString = [NSString stringWithFormat:@"Core Data error occurred with code: %d, description: %@",
-                                                                   coreDataError.code,
+        NSString *coreDataErrorString = [NSString stringWithFormat:@"Core Data error occurred with code: %ld, description: %@",
+                                                                   (long)coreDataError.code,
                                                                    coreDataError.localizedDescription];
         NSString *errorDescription = [NSString stringWithFormat:@"Unable to save background context while populating records. MMRecord import operation unsuccessful. %@",
                                                                 coreDataErrorString];

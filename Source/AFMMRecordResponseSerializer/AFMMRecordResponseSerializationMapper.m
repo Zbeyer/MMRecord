@@ -49,7 +49,7 @@
 #pragma mark - Private Methods
 
 - (BOOL)response:(NSURLResponse *)response containsPathComponentString:(NSString *)pathComponent {
-    NSRange range = [[[response URL] absoluteString] rangeOfString:pathComponent];
+    NSRange range = [[[response URL] path] rangeOfString:pathComponent];
     
     if (range.length != 0 && range.location != NSNotFound) {
         return YES;

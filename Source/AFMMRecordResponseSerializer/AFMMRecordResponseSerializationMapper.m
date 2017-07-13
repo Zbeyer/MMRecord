@@ -76,6 +76,29 @@
                                 entityForResponse:(NSURLResponse *)response
                                    responseObject:(id)responseObject
                                           context:(NSManagedObjectContext *)context {
+    
+    //Compare deepest path component first 
+    NSArray * comp = response.URL.pathComponents;
+    for (int i = comp.count-1; i > 0; i--) {
+        NSString * deepPathComponent = comp[i];
+        for (NSString *endpoint in self.mapping.allKeys) {
+            
+            if ([deepPathComponent isEqualToString:endpoint]) {
+                NSString *entityName = [self.mapping objectForKey:endpoint];
+                
+                NSEntityDescription *entity = [self entityName:entityName
+                                                mapsToEndPoint:endpoint
+                                                  withResponse:response
+                                                       context:context];
+                
+                if (entity != nil) {
+                    return entity;
+                }
+            }
+        }
+    }
+    
+    //If no match, broaden comparison...
     for (NSString *endpoint in self.mapping.allKeys) {
         NSString *entityName = [self.mapping objectForKey:endpoint];
         
@@ -89,6 +112,7 @@
         }
     }
     
+    //If still no match return nil...
     return nil;
 }
 
